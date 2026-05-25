@@ -248,25 +248,17 @@ async function generateFromWords(){
 
   const btn = document.getElementById("expandBtn");
   btn.disabled = true;
-  btn.innerHTML = `<span class="spinner"></span> Generating…`;
+  btn.innerHTML = `<span class="spinner"></span> Checking library…`;
   showMsg("expandMsg", "", "");
 
   try {
-    const result = await callAPI(`You are a vocabulary teacher creating a word list for ${level} students.
-
-For each of the following words, write:
-- A clear, student-friendly definition
-- A natural example sentence that demonstrates the meaning in context
-- A short, vivid memory hint or mnemonic (3–6 words)
-
-Words: ${words.join(", ")}
-
-Respond ONLY with one word per line in this exact format, no headers, no numbering, no extra text:
-word | definition | example sentence | memory hint`);
-
-    wordList = parseFromText(result);
+    const data = await callAPI({ mode: "words", words, level });
+    wordList = data.results;
     renderPreview();
-    showMsg("expandMsg", `✓ Generated ${wordList.length} words — review in the preview below.`, "success");
+    const cacheMsg = data.fromCache > 0
+      ? ` (${data.fromCache} from library, ${data.fromAI} new)`
+      : ` (${data.fromAI} new)`;
+    showMsg("expandMsg", `✓ Ready — ${wordList.length} words${cacheMsg}. Review in the preview below.`, "success");
   } catch(e){
     showMsg("expandMsg", "Error: " + e.message, "error");
   }
@@ -288,17 +280,8 @@ async function generateFromTopic(){
   showMsg("topicMsg", "", "");
 
   try {
-    const result = await callAPI(`You are a vocabulary teacher creating a themed word list about "${topic}" for ${level} students.
-
-Generate exactly ${count} vocabulary words relevant to this topic. For each word write:
-- A clear, student-friendly definition
-- A natural example sentence that demonstrates the meaning in context
-- A short, vivid memory hint or mnemonic (3–6 words)
-
-Respond ONLY with one word per line in this exact format, no headers, no numbering, no extra text:
-word | definition | example sentence | memory hint`);
-
-    wordList = parseFromText(result);
+    const data = await callAPI({ mode: "topic", topic, level, count });
+    wordList = data.results;
     renderPreview();
     showMsg("topicMsg", `✓ Generated ${wordList.length} words — review in the preview below.`, "success");
     if(!document.getElementById("gameTitle").value)
@@ -312,15 +295,15 @@ word | definition | example sentence | memory hint`);
 }
 
 /* ========= API CALL (via backend) ========= */
-async function callAPI(prompt){
+async function callAPI(body){
   const resp = await fetch("/api/generate", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ prompt })
+    body: JSON.stringify(body)
   });
   const data = await resp.json();
   if(data.error) throw new Error(data.error);
-  return data.result;
+  return data;
 }
 
 /* ========= HELPERS ========= */
