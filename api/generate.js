@@ -137,7 +137,13 @@ word | definition | example sentence | memory hint`;
       }
     }
 
-    return res.status(200).json({ results, fromCache, fromAI });
+    // Return both new format (results array) and old format (result string)
+    // so both old and new frontend versions work
+    const resultString = results.map(w =>
+      `${w.word} | ${w.definition} | ${w.example} | ${w.hint}`
+    ).join("\n");
+
+    return res.status(200).json({ results, fromCache, fromAI, result: resultString });
 
   } catch (err) {
     return res.status(500).json({ error: err.message });

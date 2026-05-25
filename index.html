@@ -303,7 +303,10 @@ async function callAPI(body){
   });
   const data = await resp.json();
   if(data.error) throw new Error(data.error);
-  return data;
+  // Handle both new format (results array) and old format (result string)
+  if(data.results) return data;
+  if(data.result) return { results: parseFromText(data.result), fromCache: 0, fromAI: 0 };
+  throw new Error("Unexpected response format");
 }
 
 /* ========= HELPERS ========= */
