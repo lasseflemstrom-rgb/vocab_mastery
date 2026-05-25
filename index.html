@@ -105,10 +105,17 @@
 <header>
   <div class="app-title">Vocabulary Mastery</div>
   <h1>Teacher Tool</h1>
-  <p class="subtitle">Create vocabulary game files for your students — powered by AI.</p>
 </header>
 
 <div class="main">
+
+  <!-- INTRO -->
+  <div class="panel">
+    <p style="font-size:16px;font-weight:400;color:var(--text);margin-bottom:12px;font-family:'Lora',serif;line-height:1.6;"><strong>Vocabulary Mastery</strong> is a free tool that turns word lists into interactive learning games for your students.</p>
+    <p style="font-size:14px;color:var(--text-muted);font-weight:300;line-height:1.8;margin-bottom:12px;">Instead of handing out a list to memorise, students play through three activities — identifying meanings, spelling from definitions, and writing their own sentences. Active recall like this leads to much better retention than passive study.</p>
+    <p style="font-size:14px;color:var(--text-muted);font-weight:300;line-height:1.8;margin-bottom:12px;">Paste in your words or describe a topic, and the AI generates definitions, examples, and memory hints. Download a game file and share it on your learning platform. Students just click and play — no accounts, no passwords, no apps to install.</p>
+    <p style="font-size:13px;color:var(--text-muted);font-weight:300;font-style:italic;">Built by Lasse Flemström, a high school English teacher in Sweden.</p>
+  </div>
 
   <!-- NAME OF WORD LIST -->
   <div class="panel">
@@ -255,10 +262,7 @@ async function generateFromWords(){
     const data = await callAPI({ mode: "words", words, level });
     wordList = data.results;
     renderPreview();
-    const cacheMsg = data.fromCache > 0
-      ? ` (${data.fromCache} from library, ${data.fromAI} new)`
-      : ` (${data.fromAI} new)`;
-    showMsg("expandMsg", `✓ Ready — ${wordList.length} words${cacheMsg}. Review in the preview below.`, "success");
+    showMsg("expandMsg", `✓ ${wordList.length} words ready — review in the preview below.`, "success");
   } catch(e){
     showMsg("expandMsg", "Error: " + e.message, "error");
   }
