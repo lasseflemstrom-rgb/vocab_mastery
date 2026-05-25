@@ -44,12 +44,8 @@ export default async function handler(req, res) {
     });
     const d = await r.json();
     if (!d.result) return null;
-    // result may be a string (JSON) or already an object
-    try {
-      return typeof d.result === "string" ? JSON.parse(d.result) : d.result;
-    } catch(e) {
-      return null;
-    }
+    // Debug: return the raw result so we can see what format it's in
+    return { _debug: true, raw: d.result, type: typeof d.result };
   }
 
   async function kvSet(key, value) {
