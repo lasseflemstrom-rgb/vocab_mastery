@@ -103,9 +103,10 @@ word | definition | example sentence | memory hint`;
       }
 
       results.sort((a, b) => {
+        if (!a || !a.word || !b || !b.word) return 0;
         const ai = words.findIndex(w => w.toLowerCase() === a.word.toLowerCase());
         const bi = words.findIndex(w => w.toLowerCase() === b.word.toLowerCase());
-        return ai - bi;
+        return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
       });
 
     } else if (mode === "topic") {
