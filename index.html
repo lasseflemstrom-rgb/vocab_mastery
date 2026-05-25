@@ -258,7 +258,7 @@ async function generateFromWords(){
     const cacheMsg = data.fromCache > 0
       ? ` (${data.fromCache} from library, ${data.fromAI} new)`
       : ` (${data.fromAI} new)`;
-    showMsg("expandMsg", `✓ Ready — ${wordList.length} words${cacheMsg}. DEBUG: ${JSON.stringify(data.debug)}`, "success");
+    showMsg("expandMsg", `✓ Ready — ${wordList.length} words${cacheMsg}. Review in the preview below.`, "success");
   } catch(e){
     showMsg("expandMsg", "Error: " + e.message, "error");
   }

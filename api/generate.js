@@ -44,8 +44,16 @@ export default async function handler(req, res) {
     });
     const d = await r.json();
     if (!d.result) return null;
-    // Debug: return the raw result so we can see what format it's in
-    return { _debug: true, raw: d.result, type: typeof d.result };
+    try {
+      let val = d.result;
+      // Parse as many times as needed until we get an object
+      while (typeof val === "string") {
+        val = JSON.parse(val);
+      }
+      return val;
+    } catch(e) {
+      return null;
+    }
   }
 
   async function kvSet(key, value) {
@@ -144,7 +152,7 @@ word | definition | example sentence | memory hint`;
       `${w.word} | ${w.definition} | ${w.example} | ${w.hint}`
     ).join("\n");
 
-    return res.status(200).json({ results, fromCache, fromAI, result: resultString, debug: results.slice(0,1) });
+    return res.status(200).json({ results, fromCache, fromAI, result: resultString });
 
   } catch (err) {
     return res.status(500).json({ error: err.message });
