@@ -18,6 +18,17 @@ export default async function handler(req, res) {
     try { body = JSON.parse(body); } catch(e) { body = {}; }
   }
 
+  // Support old format (prompt string) and new format (mode/words/level/topic)
+  if (body.prompt && !body.mode) {
+    // Old format — just pass straight to Claude
+    try {
+      const aiText = await callClaude(body.prompt);
+      return res.status(200).json({ result: aiText });
+    } catch(err) {
+      return res.status(500).json({ error: err.message });
+    }
+  }
+
   const { words, level, mode, topic, count } = body || {};
 
   if (!level) {
