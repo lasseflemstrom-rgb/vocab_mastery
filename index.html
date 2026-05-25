@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vocabulary Mastery — Teacher Tool</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f1117; --surface: #181c27; --surface2: #1f2433;
+    --border: #2a3045; --accent: #7eb8a4; --accent-dim: #4a7a6a;
+    --text: #e8eaf0; --text-muted: #8892a4; --error: #e07070;
+    --success: #7eb8a4; --radius: 14px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 40px 20px 80px; }
+  header { width: 100%; max-width: 900px; margin-bottom: 36px; border-bottom: 1px solid var(--border); padding-bottom: 20px; }
+  .app-title { font-family: 'Lora', serif; font-size: 13px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
+  h1 { font-family: 'Lora', serif; font-size: 28px; font-weight: 600; color: var(--text); }
+  .subtitle { font-size: 14px; color: var(--text-muted); margin-top: 6px; font-weight: 300; line-height: 1.6; }
+  .main { width: 100%; max-width: 900px; display: flex; flex-direction: column; gap: 24px; }
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  @media (max-width: 700px) { .three-col { grid-template-columns: 1fr; } }
+  .section-label { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 14px; font-weight: 400; }
+  textarea, input[type="text"] {
+    width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px;
+    color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 300;
+    padding: 12px 16px; outline: none; transition: border-color 0.2s;
+  }
+  textarea { resize: vertical; min-height: 200px; line-height: 1.8; }
+  textarea:focus, input[type="text"]:focus { border-color: var(--accent-dim); }
+  textarea::placeholder, input::placeholder { color: #4a5568; }
+  select {
+    width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px;
+    color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 300;
+    padding: 12px 16px; outline: none; cursor: pointer; appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238892a4' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 14px center;
+  }
+  select:focus { border-color: var(--accent-dim); }
+  label { font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 6px; font-weight: 400; letter-spacing: 0.05em; }
+  .field { margin-bottom: 16px; }
+  .btn { font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; padding: 11px 22px; border-radius: 8px; border: none; cursor: pointer; transition: opacity 0.15s, transform 0.1s; display: inline-flex; align-items: center; gap: 8px; }
+  .btn:hover { opacity: 0.85; transform: translateY(-1px); } .btn:active { transform: translateY(0); }
+  .btn-primary { background: var(--accent); color: var(--bg); }
+  .btn-ghost { background: var(--surface2); border: 1px solid var(--border); color: var(--text-muted); }
+  .btn-ghost:hover { color: var(--text); border-color: var(--accent-dim); }
+  .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+  .preview-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .preview-table th { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); font-weight: 500; }
+  .preview-table td { padding: 10px; border-bottom: 1px solid var(--border); color: var(--text); vertical-align: top; line-height: 1.5; font-weight: 300; }
+  .preview-table tr:last-child td { border-bottom: none; }
+  .preview-table td:first-child { font-family: 'Lora', serif; font-weight: 600; font-size: 15px; white-space: nowrap; color: var(--accent); padding-right: 16px; }
+  .msg { font-size: 13px; padding: 10px 14px; border-radius: 8px; margin-top: 14px; line-height: 1.5; }
+  .msg.error { background: rgba(224,112,112,0.1); border: 1px solid rgba(224,112,112,0.25); color: var(--error); }
+  .msg.success { background: rgba(126,184,164,0.1); border: 1px solid rgba(126,184,164,0.25); color: var(--success); }
+  .empty-preview { color: var(--text-muted); font-size: 13px; font-weight: 300; text-align: center; padding: 30px 0; }
+  .tab-row { display: flex; gap: 0; margin-bottom: 24px; border-bottom: 1px solid var(--border); }
+  .tab { font-size: 13px; font-weight: 400; padding: 10px 20px; cursor: pointer; border-bottom: 2px solid transparent; color: var(--text-muted); transition: all 0.2s; background: none; border-left: none; border-right: none; border-top: none; font-family: 'DM Sans', sans-serif; }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-panel { display: none; } .tab-panel.active { display: block; }
+  .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 6px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  .editable-cell { cursor: text; }
+  .editable-cell:focus { outline: 1px solid var(--accent-dim); border-radius: 4px; }
+  /* MODAL */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 1000; align-items: center; justify-content: center; padding: 20px; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 36px; max-width: 480px; width: 100%; animation: fadeUp 0.3s ease both; text-align: center; }
+  .modal-emoji { font-size: 40px; margin-bottom: 16px; }
+  .modal h2 { font-family: 'Lora', serif; font-size: 22px; font-weight: 600; margin-bottom: 16px; line-height: 1.3; }
+  .modal p { font-size: 14px; color: var(--text-muted); font-weight: 300; line-height: 1.8; margin-bottom: 24px; }
+  .modal p strong { color: var(--text); font-weight: 500; }
+  .modal-buttons { display: flex; flex-direction: column; gap: 10px; }
+  .btn-donate { background: #f9a825; color: #1a1a1a; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600; padding: 13px 24px; border-radius: 8px; border: none; cursor: pointer; transition: opacity 0.15s; text-decoration: none; display: block; }
+  .btn-donate:hover { opacity: 0.88; }
+  .btn-skip { background: none; border: none; color: var(--text-muted); font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer; padding: 8px; }
+  .btn-skip:hover { color: var(--text); }
+</style>
+</head>
+<body>
+
+<!-- DONATION MODAL -->
+<div class="modal-overlay" id="donationModal" onclick="closeModalOnOverlay(event)">
+  <div class="modal">
+    <div class="modal-emoji">☕</div>
+    <h2>Thanks for using Vocabulary Mastery!</h2>
+    <p>
+      This tool was built by <strong>Lasse Flemström</strong>, a high school English teacher in Sweden.
+      I made it because I wanted something better for my own students — and I hope it helps yours too.
+      <br><br>
+      If it's been useful to you, a small donation means a lot and helps keep the tool running.
+      Even just a dollar makes a difference!
+    </p>
+    <div class="modal-buttons">
+      <a class="btn-donate" href="https://buymeacoffee.com/lasseflemstrom" target="_blank" onclick="closeModal()">☕ Buy Lasse a coffee</a>
+      <button class="btn-skip" onclick="closeModal()">No thanks, maybe another time</button>
+    </div>
+  </div>
+</div>
+
+<header>
+  <div class="app-title">Vocabulary Mastery</div>
+  <h1>Teacher Tool</h1>
+  <p class="subtitle">Create vocabulary game files for your students — powered by AI.</p>
+</header>
+
+<div class="main">
+
+  <!-- NAME OF WORD LIST -->
+  <div class="panel">
+    <div class="section-label">Name of word list <span style="color:var(--error)">*</span></div>
+    <input type="text" id="gameTitle" placeholder="e.g. Unit 3 — Academic Vocabulary" oninput="this.style.borderColor=''" />
+  </div>
+
+  <!-- INPUT TABS -->
+  <div class="panel">
+    <div class="tab-row">
+      <button class="tab active" onclick="switchTab('expand', this)">✏️ Paste the words you want to teach</button>
+      <button class="tab" onclick="switchTab('topic', this)">🌐 Generate a word list by topic</button>
+    </div>
+
+    <!-- TAB 1: Words → AI generates definitions etc -->
+    <div class="tab-panel active" id="tab-expand">
+      <p style="font-size:14px;color:var(--text-muted);font-weight:300;margin-bottom:16px;">
+        Paste the words you want to teach — one per line. The AI will write definitions, example sentences, and memory hints for each one.
+      </p>
+      <div class="field">
+        <label>Target level</label>
+        <select id="expandLevel">
+          <option>Year 7–8 (age 11–13)</option>
+          <option>Year 9–10 (age 14–15)</option>
+          <option selected>Year 11–12 (age 16–18)</option>
+          <option>University level</option>
+          <option>Adult learners</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Words to teach (one per line)</label>
+        <textarea id="expandInput" placeholder="nuanced&#10;constrain&#10;emerge&#10;implicit&#10;rigorous"></textarea>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="expandBtn" onclick="generateFromWords()">✨ Generate with AI</button>
+        <button class="btn btn-ghost" onclick="clearAll()">Clear</button>
+      </div>
+      <div id="expandMsg"></div>
+    </div>
+
+    <!-- TAB 2: Topic → AI generates full list -->
+    <div class="tab-panel" id="tab-topic">
+      <p style="font-size:14px;color:var(--text-muted);font-weight:300;margin-bottom:16px;">
+        Choose a topic and the AI will generate a complete word list with definitions, examples, and hints.
+      </p>
+      <div class="three-col">
+        <div class="field">
+          <label>Topic or theme</label>
+          <input type="text" id="topicInput" placeholder="e.g. Climate change" />
+        </div>
+        <div class="field">
+          <label>Target level</label>
+          <select id="topicLevel">
+            <option>Year 7–8 (age 11–13)</option>
+            <option>Year 9–10 (age 14–15)</option>
+            <option selected>Year 11–12 (age 16–18)</option>
+            <option>University level</option>
+            <option>Adult learners</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Number of words</label>
+          <select id="topicCount">
+            <option>5</option>
+            <option>8</option>
+            <option selected>10</option>
+            <option>12</option>
+            <option>15</option>
+          </select>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="topicBtn" onclick="generateFromTopic()">✨ Generate with AI</button>
+        <button class="btn btn-ghost" onclick="clearAll()">Clear</button>
+      </div>
+      <div id="topicMsg"></div>
+    </div>
+  </div>
+
+  <!-- PREVIEW -->
+  <div class="panel">
+    <div class="section-label">Preview <span id="wordCount" style="color:var(--accent);margin-left:8px;font-size:11px;"></span></div>
+    <div id="preview"><div class="empty-preview">Your word list will appear here after generation.</div></div>
+    <p style="font-size:12px;color:var(--text-muted);margin-top:12px;font-weight:300;">Tip: click any cell to edit before downloading.</p>
+  </div>
+
+  <!-- DOWNLOAD -->
+  <div class="panel">
+    <div class="section-label">Download game file</div>
+    <p style="font-size:14px;color:var(--text-muted);font-weight:300;margin-bottom:20px;">
+      When you're happy with the word list, download a standalone game file to share with students on your learning platform.
+    </p>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="generateGame()">⬇ Download game file</button>
+    </div>
+    <div id="generateMsg"></div>
+  </div>
+
+</div>
+
+<script>
+
+/* ========= TABS ========= */
+function switchTab(name, el){
+  document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+  document.getElementById("tab-"+name).classList.add("active");
+  el.classList.add("active");
+}
+
+/* ========= WORD LIST STATE ========= */
+let wordList = [];
+
+function parseFromText(raw){
+  return raw.trim().split("\n")
+    .map(line => {
+      let parts = line.split("|").map(x => x.trim());
+      if(!parts[0]) return null;
+      return { word: parts[0], definition: parts[1]||"", example: parts[2]||"", hint: parts[3]||"" };
+    })
+    .filter(Boolean);
+}
+
+function clearAll(){
+  document.getElementById("expandInput").value = "";
+  document.getElementById("topicInput").value = "";
+  wordList = [];
+  renderPreview();
+}
+
+/* ========= TAB 1: EXPAND WORDS ========= */
+async function generateFromWords(){
+  const raw = document.getElementById("expandInput").value.trim();
+  if(!raw){ showMsg("expandMsg", "Please enter at least one word.", "error"); return; }
+  const words = raw.split("\n").map(w => w.trim()).filter(Boolean);
+  const level = document.getElementById("expandLevel").value;
+
+  const btn = document.getElementById("expandBtn");
+  btn.disabled = true;
+  btn.innerHTML = `<span class="spinner"></span> Generating…`;
+  showMsg("expandMsg", "", "");
+
+  try {
+    const result = await callAPI(`You are a vocabulary teacher creating a word list for ${level} students.
+
+For each of the following words, write:
+- A clear, student-friendly definition
+- A natural example sentence that demonstrates the meaning in context
+- A short, vivid memory hint or mnemonic (3–6 words)
+
+Words: ${words.join(", ")}
+
+Respond ONLY with one word per line in this exact format, no headers, no numbering, no extra text:
+word | definition | example sentence | memory hint`);
+
+    wordList = parseFromText(result);
+    renderPreview();
+    showMsg("expandMsg", `✓ Generated ${wordList.length} words — review in the preview below.`, "success");
+  } catch(e){
+    showMsg("expandMsg", "Error: " + e.message, "error");
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = "✨ Generate with AI";
+}
+
+/* ========= TAB 2: TOPIC ========= */
+async function generateFromTopic(){
+  const topic = document.getElementById("topicInput").value.trim();
+  if(!topic){ showMsg("topicMsg", "Please enter a topic.", "error"); return; }
+  const level = document.getElementById("topicLevel").value;
+  const count = document.getElementById("topicCount").value;
+
+  const btn = document.getElementById("topicBtn");
+  btn.disabled = true;
+  btn.innerHTML = `<span class="spinner"></span> Generating…`;
+  showMsg("topicMsg", "", "");
+
+  try {
+    const result = await callAPI(`You are a vocabulary teacher creating a themed word list about "${topic}" for ${level} students.
+
+Generate exactly ${count} vocabulary words relevant to this topic. For each word write:
+- A clear, student-friendly definition
+- A natural example sentence that demonstrates the meaning in context
+- A short, vivid memory hint or mnemonic (3–6 words)
+
+Respond ONLY with one word per line in this exact format, no headers, no numbering, no extra text:
+word | definition | example sentence | memory hint`);
+
+    wordList = parseFromText(result);
+    renderPreview();
+    showMsg("topicMsg", `✓ Generated ${wordList.length} words — review in the preview below.`, "success");
+    if(!document.getElementById("gameTitle").value)
+      document.getElementById("gameTitle").value = topic + " Vocabulary";
+  } catch(e){
+    showMsg("topicMsg", "Error: " + e.message, "error");
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = "✨ Generate with AI";
+}
+
+/* ========= API CALL (via backend) ========= */
+async function callAPI(prompt){
+  const resp = await fetch("/api/generate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ prompt })
+  });
+  const data = await resp.json();
+  if(data.error) throw new Error(data.error);
+  return data.result;
+}
+
+/* ========= HELPERS ========= */
+function showMsg(id, text, type){
+  const el = document.getElementById(id);
+  el.innerHTML = text ? `<div class="msg ${type}">${text}</div>` : "";
+}
+
+/* ========= PREVIEW (editable) ========= */
+function renderPreview(){
+  const preview = document.getElementById("preview");
+  const countEl = document.getElementById("wordCount");
+
+  if(!wordList.length){
+    preview.innerHTML = `<div class="empty-preview">Your word list will appear here after generation.</div>`;
+    countEl.textContent = "";
+    return;
+  }
+
+  countEl.textContent = wordList.length + " word" + (wordList.length !== 1 ? "s" : "") +
+    (wordList.length >= 4 ? " · ✓ Ready" : " · Need at least 4");
+
+  preview.innerHTML = `
+    <table class="preview-table">
+      <thead><tr><th>Word</th><th>Definition</th><th>Example</th><th>Hint</th></tr></thead>
+      <tbody>
+        ${wordList.map((w, i) => `
+          <tr>
+            <td contenteditable="true" class="editable-cell" onblur="editWord(${i},0,this)">${w.word}</td>
+            <td contenteditable="true" class="editable-cell" onblur="editWord(${i},1,this)">${w.definition}</td>
+            <td contenteditable="true" class="editable-cell" onblur="editWord(${i},2,this)">${w.example}</td>
+            <td contenteditable="true" class="editable-cell" onblur="editWord(${i},3,this)">${w.hint}</td>
+          </tr>`).join("")}
+      </tbody>
+    </table>`;
+}
+
+function editWord(i, field, el){
+  const fields = ["word","definition","example","hint"];
+  wordList[i][fields[field]] = el.innerText.trim();
+}
+
+/* ========= DOWNLOAD GAME ========= */
+function generateGame(){
+  const titleEl = document.getElementById("gameTitle");
+  const title = titleEl.value.trim();
+  const msgEl = document.getElementById("generateMsg");
+
+  if(!title){
+    titleEl.style.borderColor = "var(--error)";
+    titleEl.focus();
+    showMsg("generateMsg", "Please enter a name for the word list before downloading.", "error");
+    return;
+  }
+  if(wordList.length < 4){
+    showMsg("generateMsg", "Please generate at least 4 words before downloading.", "error");
+    return;
+  }
+
+  const wordListStr = wordList.map(w => `${w.word} | ${w.definition} | ${w.example} | ${w.hint}`).join("\n");
+  const safeName = title.replace(/[^a-z0-9]/gi, "_").toLowerCase();
+  const filename = `vocab_game_${safeName}.html`;
+  const gameHtml = buildGameHtml(title, wordListStr);
+
+  const blob = new Blob([gameHtml], { type: "text/html" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+
+  showMsg("generateMsg", `✓ Downloaded <strong>${filename}</strong> — share this file with your students.`, "success");
+  setTimeout(() => document.getElementById("donationModal").classList.add("open"), 1200);
+}
+
+/* ========= MODAL ========= */
+function closeModal(){
+  document.getElementById("donationModal").classList.remove("open");
+}
+function closeModalOnOverlay(e){
+  if(e.target === document.getElementById("donationModal")) closeModal();
+}
+
+/* ========= GAME TEMPLATE ========= */
+function buildGameHtml(title, wordListStr){
+  const safeWordList = wordListStr.replace(/`/g, "'").replace(/\\/g, "\\\\");
+return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${title}</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0f1117;--surface:#181c27;--surface2:#1f2433;--border:#2a3045;--accent:#7eb8a4;--accent-dim:#4a7a6a;--text:#e8eaf0;--text-muted:#8892a4;--error:#e07070;--success:#7eb8a4;--radius:14px;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:40px 20px 60px;}
+  header{width:100%;max-width:640px;margin-bottom:36px;}
+  .app-title{font-family:'Lora',serif;font-size:13px;font-weight:400;letter-spacing:0.18em;text-transform:uppercase;color:var(--text-muted);}
+  .progress-wrap{margin-top:16px;display:flex;align-items:center;gap:12px;}
+  .progress-bar{flex:1;height:3px;background:var(--border);border-radius:99px;overflow:hidden;}
+  .progress-fill{height:100%;background:var(--accent);border-radius:99px;transition:width 0.5s ease;}
+  .progress-label{font-size:12px;color:var(--text-muted);white-space:nowrap;font-weight:300;}
+  .phase-pills{display:flex;gap:6px;margin-top:12px;}
+  .phase-pill{font-size:11px;letter-spacing:0.08em;text-transform:uppercase;padding:4px 10px;border-radius:99px;border:1px solid var(--border);color:var(--text-muted);font-weight:400;transition:all 0.3s;}
+  .phase-pill.active{background:var(--accent);border-color:var(--accent);color:var(--bg);font-weight:500;}
+  .card{width:100%;max-width:640px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:40px;animation:fadeUp 0.3s ease both;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+  .word-display{font-family:'Lora',serif;font-size:42px;font-weight:600;letter-spacing:-0.01em;color:var(--text);margin-bottom:6px;}
+  .section-label{font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-muted);margin-bottom:24px;font-weight:400;}
+  h2{font-family:'Lora',serif;font-size:24px;font-weight:600;margin-bottom:20px;line-height:1.3;}
+  h2.correct{color:var(--success);}h2.incorrect{color:var(--error);}
+  .info-box{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:20px 24px;margin-bottom:28px;line-height:1.7;}
+  .info-box p{margin-bottom:8px;font-size:15px;}.info-box p:last-child{margin-bottom:0;}
+  .info-box strong{color:var(--text-muted);font-size:11px;letter-spacing:0.1em;text-transform:uppercase;font-weight:500;display:block;margin-bottom:2px;}
+  .info-box em{font-family:'Lora',serif;font-style:italic;color:var(--text);}
+  .options{display:flex;flex-direction:column;gap:10px;margin-bottom:8px;}
+  .option-btn{background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;font-weight:300;padding:14px 18px;text-align:left;cursor:pointer;transition:border-color 0.15s,background 0.15s,transform 0.1s;line-height:1.4;user-select:none;}
+  .option-btn:focus,.option-btn:focus-visible{outline:none!important;box-shadow:none!important;border-color:var(--border)!important;}
+  .option-btn:hover{border-color:var(--accent-dim);background:#232b3a;transform:translateX(3px);}
+  input[type="text"],textarea{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:16px;font-weight:300;padding:14px 16px;margin-bottom:16px;outline:none;transition:border-color 0.2s;resize:vertical;}
+  input[type="text"]:focus,textarea:focus{border-color:var(--accent-dim);}
+  textarea{min-height:100px;}
+  .btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px;}
+  .btn{font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;padding:11px 22px;border-radius:8px;border:none;cursor:pointer;transition:opacity 0.15s,transform 0.1s;}
+  .btn:hover{opacity:0.85;transform:translateY(-1px);}.btn:active{transform:translateY(0);}
+  .btn-primary{background:var(--accent);color:var(--bg);}
+  .btn-ghost{background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);}
+  .btn-ghost:hover{color:var(--text);border-color:var(--accent-dim);}
+  .feedback-msg{font-size:14px;margin-top:12px;padding:10px 14px;border-radius:8px;line-height:1.5;}
+  .feedback-msg.error{background:rgba(224,112,112,0.1);border:1px solid rgba(224,112,112,0.25);color:var(--error);}
+  .feedback-msg.hint-msg{background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);}
+  .intro-steps{list-style:none;counter-reset:steps;display:flex;flex-direction:column;gap:14px;margin-bottom:32px;}
+  .intro-steps li{counter-increment:steps;display:flex;align-items:center;gap:16px;font-size:16px;font-weight:300;color:var(--text);}
+  .intro-steps li::before{content:counter(steps);width:30px;height:30px;background:var(--surface2);border:1px solid var(--border);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:var(--accent);flex-shrink:0;}
+  .summary-grid{display:grid;gap:10px;margin-bottom:28px;}
+  .summary-item{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px 18px;}
+  .summary-item .word{font-family:'Lora',serif;font-size:17px;font-weight:600;margin-bottom:4px;}
+  .summary-item .detail{font-size:13px;color:var(--text-muted);font-weight:300;}
+  .summary-item .sentence-text{font-size:14px;color:var(--text);font-weight:300;margin-top:4px;line-height:1.5;font-style:italic;font-family:'Lora',serif;}
+  .hint-bar{font-size:13px;color:var(--text-muted);margin-bottom:16px;}
+  .divider{border:none;border-top:1px solid var(--border);margin:28px 0;}
+  .student-name{font-family:'Lora',serif;font-size:20px;color:var(--accent);margin-bottom:28px;}
+  .key-hint{font-size:12px;color:var(--text-muted);margin-top:14px;font-weight:300;}
+  .key-hint kbd{font-family:'DM Sans',sans-serif;background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:1px 6px;font-size:11px;}
+  #confetti-canvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:999;}
+  @media print{
+    body{background:white;color:black;padding:10px;font-size:11px;}
+    header,.btn-row,.key-hint,#confetti-canvas{display:none!important;}
+    .card{border:none;background:white;padding:0;}
+    h2{color:black;font-size:16px;margin-bottom:10px;}h2.correct{color:#2a7a5a;}
+    .student-name{color:black;font-size:18px;font-weight:600;margin-bottom:10px;}
+    .section-label{color:#555;margin-bottom:6px;}
+    .divider{border-color:#ccc;margin:10px 0;}
+    .summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px;}
+    .summary-item{border:1px solid #ccc;background:#f9f9f9;border-radius:6px;padding:6px 10px;break-inside:avoid;}
+    .summary-item .word{color:black;font-size:13px;margin-bottom:2px;}
+    .summary-item .detail{color:#555;font-size:11px;}
+    .summary-item .sentence-text{color:#222;font-size:11px;line-height:1.4;margin-top:2px;}
+  }
+</style>
+</head>
+<body>
+<canvas id="confetti-canvas"></canvas>
+<header>
+  <div class="app-title">${title}</div>
+  <div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    <div class="progress-label" id="progressLabel">0 / 0</div>
+  </div>
+  <div class="phase-pills">
+    <div class="phase-pill" id="pill-meaning">Meaning</div>
+    <div class="phase-pill" id="pill-spelling">Spelling</div>
+    <div class="phase-pill" id="pill-sentence">Sentence</div>
+  </div>
+</header>
+<div id="game" class="card"></div>
+<script>
+const game=document.getElementById("game");
+const baseWords=\`${safeWordList}\`.trim().split("\\n").map(line=>{let[word,definition,example,hint]=line.split("|").map(x=>x.trim());return{word,definition,example,hint};});
+const originalCount=baseWords.length;
+const totalSteps=originalCount*3;
+let spellingIndex=0,sentenceIndex=0,masteredSteps=0;
+let meaningQueue=[...baseWords],meaningIndex=0,mcRepeatLater=[];
+let spellingQueue=[...baseWords],repeatLater=[];
+let phase="intro",currentOptions=[],usedHint=false,usedAudio=false,lastCorrect=false;
+let sentences={},mistakes={},studentName="";
+let firstTime=new Set(baseWords.map(w=>w.word));
+let perfectWords=new Set();
+baseWords.forEach(w=>mistakes[w.word]=0);
+function updateProgress(){
+  const fill=document.getElementById("progressFill"),label=document.getElementById("progressLabel");
+  ["meaning","spelling","sentence"].forEach(p=>document.getElementById("pill-"+p).classList.remove("active"));
+  let phasePill="",done=masteredSteps;
+  if(phase==="intro")done=0;
+  else if(phase==="choice"||phase==="choiceFeedback")phasePill="meaning";
+  else if(phase==="spelling"||phase==="spellFeedback")phasePill="spelling";
+  else if(phase==="sentence"||phase==="sentenceFeedback")phasePill="sentence";
+  else if(phase==="end")done=totalSteps;
+  if(phasePill)document.getElementById("pill-"+phasePill).classList.add("active");
+  fill.style.width=Math.round((done/totalSteps)*100)+"%";
+  label.textContent=done+" / "+totalSteps;
+}
+function render(){game.style.animation="none";game.offsetHeight;game.style.animation="";updateProgress();if(phase==="intro")intro();else if(phase==="choice")choice();else if(phase==="choiceFeedback")choiceFeedback();else if(phase==="spelling")spelling();else if(phase==="spellFeedback")spellFeedback();else if(phase==="sentence")sentence();else if(phase==="sentenceFeedback")sentenceFeedback();else summary();}
+function enableEnterToContinue(fn){function handler(e){const tag=e.target.tagName;if(tag==="INPUT"||tag==="TEXTAREA")return;if(e.key==="Enter"||e.key===" "){e.preventDefault();document.removeEventListener("keydown",handler);fn();}}document.addEventListener("keydown",handler);}
+function fireConfetti(){const canvas=document.getElementById("confetti-canvas"),ctx=canvas.getContext("2d");canvas.width=window.innerWidth;canvas.height=window.innerHeight;const colors=["#7eb8a4","#a8d8c8","#e8eaf0","#4a7a6a","#c8e8de","#f0c87a"];const particles=Array.from({length:72},()=>({x:Math.random()*canvas.width,y:-10-Math.random()*40,r:4+Math.random()*5,d:2+Math.random()*3,color:colors[Math.floor(Math.random()*colors.length)],tilt:Math.random()*10-5,tiltSpeed:0.1+Math.random()*0.2,angle:0,shape:Math.random()>0.5?"rect":"circle"}));let frame=0;const maxFrames=90;function draw(){ctx.clearRect(0,0,canvas.width,canvas.height);particles.forEach(p=>{ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.angle);ctx.fillStyle=p.color;ctx.globalAlpha=Math.max(0,1-frame/maxFrames);if(p.shape==="rect"){ctx.fillRect(-p.r/2,-p.r/2,p.r,p.r*1.6);}else{ctx.beginPath();ctx.arc(0,0,p.r/2,0,Math.PI*2);ctx.fill();}ctx.restore();p.y+=p.d;p.x+=Math.sin(p.angle)*1.5;p.angle+=p.tiltSpeed;p.tilt+=p.tiltSpeed;});frame++;if(frame<maxFrames)requestAnimationFrame(draw);else ctx.clearRect(0,0,canvas.width,canvas.height);}draw();}
+function intro(){game.innerHTML=\`<div class="section-label">How it works</div><ul class="intro-steps"><li>Choose the correct meaning for each word</li><li>Spell the word from its definition</li><li>Write a sentence that shows you understand it</li></ul><div class="info-box" style="margin-bottom:28px;"><p><strong>Mastering a word</strong>Each word has three steps — meaning, spelling, and sentence. Complete all three correctly and you master the word. The confetti means you've got one! You need <strong>\${totalSteps} correct answers</strong> in total to finish.</p><p><strong>When you finish</strong>Show the summary screen to your teacher.</p></div><div class="section-label" style="margin-bottom:8px;">Your name</div><input type="text" id="nameInput" placeholder="Enter your name…" style="margin-bottom:16px;" onkeydown="if(event.key==='Enter')startGame()"><div class="btn-row"><button class="btn btn-primary" onclick="startGame()">Begin</button></div><div id="nameFb"></div>\`;setTimeout(()=>document.getElementById("nameInput").focus(),50);}
+function startGame(){const val=document.getElementById("nameInput").value.trim();if(!val){document.getElementById("nameFb").innerHTML=\`<div class="feedback-msg error">Please enter your name before starting.</div>\`;return;}studentName=val;phase="choice";render();}
+function choice(){let w=meaningQueue[meaningIndex];let distractors=baseWords.filter(x=>x.word!==w.word).map(x=>x.definition).sort(()=>Math.random()-0.5).slice(0,3);currentOptions=[w.definition,...distractors].sort(()=>Math.random()-0.5);game.innerHTML=\`<div class="section-label">Choose the correct meaning</div><div class="word-display">\${w.word}</div><hr class="divider"><div class="options">\${currentOptions.map((c,i)=>\`<div class="option-btn" onclick="checkChoice(\${i})">\${c}</div>\`).join("")}</div>\`;if(document.activeElement)document.activeElement.blur();}
+function checkChoice(i){let w=meaningQueue[meaningIndex];lastCorrect=currentOptions[i]===w.definition;if(!lastCorrect){mistakes[w.word]++;firstTime.delete(w.word);if(!mcRepeatLater.find(x=>x.word===w.word))mcRepeatLater.push(w);}else{fireConfetti();masteredSteps++;mcRepeatLater=mcRepeatLater.filter(x=>x.word!==w.word);}phase="choiceFeedback";render();}
+function choiceFeedback(){let w=meaningQueue[meaningIndex];game.innerHTML=\`<h2 class="\${lastCorrect?'correct':'incorrect'}">\${lastCorrect?"🎉 Perfect! Well done.":"✗ Not quite"}</h2><div class="word-display" style="font-size:28px;margin-bottom:20px;">\${w.word}</div><div class="info-box"><p><strong>Definition</strong>\${w.definition}</p><p><strong>In use</strong><em>\${w.example}</em></p><p><strong>Remember</strong>\${w.hint}</p></div><div class="btn-row"><button class="btn btn-primary" onclick="nextMeaning()">Continue</button></div><p class="key-hint">or press <kbd>Enter</kbd> / <kbd>Space</kbd></p>\`;enableEnterToContinue(nextMeaning);}
+function nextMeaning(){meaningIndex++;if(meaningIndex>=meaningQueue.length&&mcRepeatLater.length)meaningQueue.push(...mcRepeatLater.splice(0));if(meaningIndex<meaningQueue.length)phase="choice";else phase="spelling";render();}
+function spelling(){let w=spellingQueue[spellingIndex];usedHint=false;usedAudio=false;game.innerHTML=\`<div class="section-label">Spelling</div><div class="info-box" style="margin-bottom:20px;"><p><strong>Definition</strong>\${w.definition}</p></div><input type="text" id="spell" placeholder="Type the word…" autocomplete="off" autocorrect="off" spellcheck="false" onkeydown="if(event.key==='Enter')checkSpelling()"><div class="btn-row"><button class="btn btn-primary" onclick="checkSpelling()">Check</button><button class="btn btn-ghost" onclick="speak()">🔊 Hear it</button><button class="btn btn-ghost" onclick="hint()">💡 Hint</button></div><div id="fb"></div>\`;setTimeout(()=>document.getElementById("spell").focus(),50);}
+function checkSpelling(){let w=spellingQueue[spellingIndex];let val=document.getElementById("spell").value.toLowerCase().trim();lastCorrect=val===w.word;if(!lastCorrect){mistakes[w.word]++;firstTime.delete(w.word);if(!repeatLater.find(x=>x.word===w.word))repeatLater.push(w);}else if(usedHint||usedAudio){firstTime.delete(w.word);if(!repeatLater.find(x=>x.word===w.word))repeatLater.push(w);}else{fireConfetti();masteredSteps++;repeatLater=repeatLater.filter(x=>x.word!==w.word);}phase="spellFeedback";render();}
+function speak(){usedAudio=true;let u=new SpeechSynthesisUtterance(spellingQueue[spellingIndex].word);u.lang="en-US";speechSynthesis.speak(u);}
+function hint(){usedHint=true;let w=spellingQueue[spellingIndex];document.getElementById("fb").innerHTML=\`<div class="feedback-msg hint-msg">\${w.word[0].toUpperCase()} · \${w.word.length} letters &nbsp;·&nbsp; \${w.hint}</div>\`;}
+const encouragements=["Don't worry — spelling takes practice!","Keep going, you're getting there!","Mistakes help you learn — that's what this is for!","You'll get it next time!","Every expert was once a beginner!","Learning is all about trying again!"];
+function spellFeedback(){let w=spellingQueue[spellingIndex];let message="";if(!lastCorrect)message=\`<p style="color:var(--accent);font-size:14px;margin-bottom:12px;">\${encouragements[Math.floor(Math.random()*encouragements.length)]} Study the correct spelling below and try to memorise it.</p>\`;else if(usedHint&&usedAudio)message=\`<p style="color:var(--accent);font-size:14px;margin-bottom:12px;">That's right! Next time, try to remember the spelling without using the hint or listening to it.</p>\`;else if(usedHint)message=\`<p style="color:var(--accent);font-size:14px;margin-bottom:12px;">That's right! Study the word below so you can spell it without the hint next time.</p>\`;else if(usedAudio)message=\`<p style="color:var(--accent);font-size:14px;margin-bottom:12px;">That's right! Study the word below so you can spell it without listening to it next time.</p>\`;game.innerHTML=\`<h2 class="\${lastCorrect?'correct':'incorrect'}">\${!lastCorrect?"✗ Not quite":(!usedHint&&!usedAudio)?"🎉 Perfect! Well done.":"✓ That's right"}</h2>\${message}<div class="info-box"><p><strong>Correct spelling</strong><span style="font-family:'Lora',serif;font-size:20px;font-weight:600;">\${w.word}</span></p><p><strong>Definition</strong>\${w.definition}</p><p><strong>In use</strong><em>\${w.example}</em></p><p><strong>Remember</strong>\${w.hint}</p></div><div class="btn-row"><button class="btn btn-primary" onclick="advanceSpelling()">Continue</button></div><p class="key-hint">or press <kbd>Enter</kbd> / <kbd>Space</kbd></p>\`;enableEnterToContinue(advanceSpelling);}
+function advanceSpelling(){spellingIndex++;if(spellingIndex>=spellingQueue.length&&repeatLater.length)spellingQueue.push(...repeatLater.splice(0));if(spellingIndex<spellingQueue.length)phase="spelling";else phase="sentence";render();}
+function sentence(){let w=baseWords[sentenceIndex];game.innerHTML=\`<div class="section-label">Write a sentence</div><div class="word-display">\${w.word}</div><div class="hint-bar" style="margin:8px 0 20px;">\${w.definition}</div><textarea id="t" placeholder="Write a sentence that shows you know what this word means…"></textarea><div class="btn-row"><button class="btn btn-primary" id="checkBtn" onclick="checkSentence()">Check</button></div><div id="fb"></div>\`;setTimeout(()=>document.getElementById("t").focus(),50);}
+function checkSentence(){let w=baseWords[sentenceIndex];let s=document.getElementById("t").value.trim();let fb=document.getElementById("fb");if(!s.toLowerCase().includes(w.word)){fb.innerHTML=\`<div class="feedback-msg error">Your sentence must include the word <strong>\${w.word}</strong>.</div>\`;return;}if(s.split(/\\s+/).length<5){fb.innerHTML=\`<div class="feedback-msg error">That's too short — try writing a fuller sentence of at least 5 words.</div>\`;return;}if(!/^[A-Z]/.test(s)){fb.innerHTML=\`<div class="feedback-msg error">Start your sentence with a capital letter.</div>\`;return;}if(!/[.!?]$/.test(s)){fb.innerHTML=\`<div class="feedback-msg error">End your sentence with a full stop, exclamation mark, or question mark.</div>\`;return;}sentences[w.word]=s;if(firstTime.has(w.word))perfectWords.add(w.word);fireConfetti();masteredSteps++;phase="sentenceFeedback";render();}
+function sentenceFeedback(){let w=baseWords[sentenceIndex];game.innerHTML=\`<h2 class="correct">Looks right!</h2><div class="word-display" style="font-size:28px;margin-bottom:20px;">\${w.word}</div><div class="info-box"><p><strong>Here is another example on how you can use the word</strong><em>\${w.example}</em></p></div><div class="btn-row"><button class="btn btn-primary" onclick="nextSentence()">Continue</button></div><p class="key-hint">or press <kbd>Enter</kbd> / <kbd>Space</kbd></p>\`;enableEnterToContinue(nextSentence);}
+function nextSentence(){sentenceIndex++;if(sentenceIndex<originalCount)phase="sentence";else phase="end";render();}
+function summary(){updateProgress();let hardest=Object.entries(mistakes).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]).slice(0,3);let hardestHtml=hardest.length?hardest.map(([word,count])=>\`<div class="summary-item"><div class="word">\${word}</div><div class="detail">\${count} mistake\${count>1?'s':''}</div></div>\`).join(""):\`<div class="summary-item"><div class="detail" style="color:var(--success);">No mistakes — excellent work!</div></div>\`;let perfectHtml=perfectWords.size?[...perfectWords].map(word=>\`<div class="summary-item"><div class="word">\${word}</div></div>\`).join(""):\`<div class="summary-item"><div class="detail">Keep practising — you'll get there!</div></div>\`;let sentencesHtml=Object.entries(sentences).map(([word,s])=>\`<div class="summary-item"><div class="word">\${word}</div><div class="sentence-text">\${s}</div></div>\`).join("");game.innerHTML=\`<div class="section-label">Complete</div><h2 style="margin-bottom:4px;">Session finished</h2><div class="student-name">\${studentName}</div><div class="section-label" style="margin-bottom:12px;">Got it first time</div><div class="summary-grid">\${perfectHtml}</div><hr class="divider"><div class="section-label" style="margin-bottom:12px;">Words to review</div><div class="summary-grid">\${hardestHtml}</div><hr class="divider"><div class="section-label" style="margin-bottom:12px;">Your sentences</div><div class="summary-grid">\${sentencesHtml}</div><hr class="divider"><div class="btn-row"><button class="btn btn-primary" onclick="window.print()">🖨 Save / Print summary</button></div>\`;}
+render();
+<\/script>
+</body>
+</html>`;
+}
+
+</script>
+</body>
+</html>
