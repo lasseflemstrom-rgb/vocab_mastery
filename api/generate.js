@@ -144,7 +144,7 @@ word | definition | example sentence | memory hint`;
       `${w.word} | ${w.definition} | ${w.example} | ${w.hint}`
     ).join("\n");
 
-    return res.status(200).json({ results, fromCache, fromAI, result: resultString });
+    return res.status(200).json({ results, fromCache, fromAI, result: resultString, debug: results.slice(0,1) });
 
   } catch (err) {
     return res.status(500).json({ error: err.message });
