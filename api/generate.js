@@ -12,10 +12,16 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
 
-  const { words, level, mode, topic, count } = req.body;
+  // Handle body whether it arrives as string or object
+  let body = req.body;
+  if (typeof body === "string") {
+    try { body = JSON.parse(body); } catch(e) { body = {}; }
+  }
+
+  const { words, level, mode, topic, count } = body || {};
 
   if (!level) {
-    return res.status(400).json({ error: "Missing level" });
+    return res.status(400).json({ error: `Missing level — received: ${JSON.stringify(body)}` });
   }
 
   const UPSTASH_URL = process.env.UPSTASH_REDIS_REST_URL;
