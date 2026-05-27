@@ -536,6 +536,13 @@ function nextSentence(){sentenceIndex++;if(sentenceIndex<originalCount)phase="se
 function summary(){updateProgress();let hardest=Object.entries(mistakes).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]).slice(0,3);let hardestHtml=hardest.length?hardest.map(([word,count])=>\`<div class="summary-item"><div class="word">\${word}</div><div class="detail">\${count} mistake\${count>1?'s':''}</div></div>\`).join(""):\`<div class="summary-item"><div class="detail" style="color:var(--success);">No mistakes — excellent work!</div></div>\`;let perfectHtml=perfectWords.size?[...perfectWords].map(word=>\`<div class="summary-item"><div class="word">\${word}</div></div>\`).join(""):\`<div class="summary-item"><div class="detail">Keep practising — you'll get there!</div></div>\`;let sentencesHtml=Object.entries(sentences).map(([word,s])=>\`<div class="summary-item"><div class="word">\${word}</div><div class="sentence-text">\${s}</div></div>\`).join("");game.innerHTML=\`<div class="section-label">Complete</div><h2 style="margin-bottom:4px;">Session finished</h2><div class="student-name">\${studentName}</div><div class="section-label" style="margin-bottom:12px;">Got it first time</div><div class="summary-grid">\${perfectHtml}</div><hr class="divider"><div class="section-label" style="margin-bottom:12px;">Words to review</div><div class="summary-grid">\${hardestHtml}</div><hr class="divider"><div class="section-label" style="margin-bottom:12px;">Your sentences</div><div class="summary-grid">\${sentencesHtml}</div><hr class="divider"><div class="btn-row"><button class="btn btn-primary" onclick="window.print()">🖨 Save / Print summary</button></div>\`;}
 render();
 <\/script>
+
+<!-- Vercel Web Analytics -->
+<script type="module">
+  import { inject } from 'https://cdn.jsdelivr.net/npm/@vercel/analytics@1/+esm';
+  inject();
+</script>
+
 </body>
 </html>`;
 }
