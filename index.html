@@ -373,7 +373,8 @@ async function regenerateWord(i){
   btn.disabled = true;
 
   try {
-    const data = await callAPI({ mode: "words", words: [w.word], level });
+    const topic = document.getElementById("topicInput").value.trim() || "general English vocabulary";
+const data = await callAPI({ mode: "topic", topic, level, count: 1 });
     if(data.results && data.results.length > 0){
       wordList[i] = data.results[0];
       renderPreview();
