@@ -378,17 +378,20 @@ async function regenerateWord(i){
     const resp = await fetch("/api/generate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        mode: "replace",
-        topic,
-        level,
-        exclude: existingWords
-      })
+      body: JSON.stringify({ mode: "replace", topic, level, exclude: existingWords })
     });
     const data = await resp.json();
     if(data.results && data.results.length > 0){
       wordList[i] = data.results[0];
-      renderPreview();
+      // Only update the specific row, not the whole table
+      const row = document.getElementById(`row-${i}`);
+      const cells = row.querySelectorAll(".editable-cell");
+      cells[0].innerText = data.results[0].word;
+      cells[1].innerText = data.results[0].definition;
+      cells[2].innerText = data.results[0].example;
+      cells[3].innerText = data.results[0].hint;
+      btn.textContent = "↻";
+      btn.disabled = false;
     }
   } catch(e){
     btn.textContent = "↻";
