@@ -367,14 +367,25 @@ async function regenerateWord(i){
   const level = document.getElementById("expandLevel") ?
     document.getElementById("expandLevel").value :
     document.getElementById("topicLevel").value;
+  const topic = document.getElementById("topicInput").value.trim() || "general English vocabulary";
+  const existingWords = wordList.map(x => x.word).join(", ");
 
   const btn = document.getElementById(`regen-${i}`);
   btn.textContent = "…";
   btn.disabled = true;
 
   try {
-    const topic = document.getElementById("topicInput").value.trim() || "general English vocabulary";
-const data = await callAPI({ mode: "topic", topic, level, count: 1 });
+    const resp = await fetch("/api/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        mode: "replace",
+        topic,
+        level,
+        exclude: existingWords
+      })
+    });
+    const data = await resp.json();
     if(data.results && data.results.length > 0){
       wordList[i] = data.results[0];
       renderPreview();
@@ -384,7 +395,6 @@ const data = await callAPI({ mode: "topic", topic, level, count: 1 });
     btn.disabled = false;
   }
 }
-
 /* ========= DOWNLOAD GAME ========= */
 function generateGame(){
   const titleEl = document.getElementById("gameTitle");
