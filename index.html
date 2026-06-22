@@ -357,6 +357,32 @@ function editWord(i, field, el){
   const fields = ["word","definition","example","hint"];
   wordList[i][fields[field]] = el.innerText.trim();
 }
+  function removeWord(i){
+  wordList.splice(i, 1);
+  renderPreview();
+}
+
+async function regenerateWord(i){
+  const w = wordList[i];
+  const level = document.getElementById("expandLevel") ?
+    document.getElementById("expandLevel").value :
+    document.getElementById("topicLevel").value;
+
+  const btn = document.getElementById(`regen-${i}`);
+  btn.textContent = "…";
+  btn.disabled = true;
+
+  try {
+    const data = await callAPI({ mode: "words", words: [w.word], level });
+    if(data.results && data.results.length > 0){
+      wordList[i] = data.results[0];
+      renderPreview();
+    }
+  } catch(e){
+    btn.textContent = "↻";
+    btn.disabled = false;
+  }
+}
 
 /* ========= DOWNLOAD GAME ========= */
 function generateGame(){
