@@ -339,11 +339,15 @@ function renderPreview(){
       <thead><tr><th>Word</th><th>Definition</th><th>Example</th><th>Hint</th></tr></thead>
       <tbody>
         ${wordList.map((w, i) => `
-          <tr>
+         <tr id="row-${i}">
             <td contenteditable="true" class="editable-cell" onblur="editWord(${i},0,this)">${w.word}</td>
             <td contenteditable="true" class="editable-cell" onblur="editWord(${i},1,this)">${w.definition}</td>
             <td contenteditable="true" class="editable-cell" onblur="editWord(${i},2,this)">${w.example}</td>
             <td contenteditable="true" class="editable-cell" onblur="editWord(${i},3,this)">${w.hint}</td>
+            <td style="text-align:right;white-space:nowrap;padding:6px 8px;">
+              <button onclick="regenerateWord(${i})" title="Regenerate this word" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--text-muted);cursor:pointer;padding:4px 8px;font-size:12px;margin-right:4px;" id="regen-${i}">↻</button>
+              <button onclick="removeWord(${i})" title="Remove this word" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--error);cursor:pointer;padding:4px 8px;font-size:12px;">✕</button>
+            </td>
           </tr>`).join("")}
       </tbody>
     </table>`;
