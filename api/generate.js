@@ -20,7 +20,6 @@ export default async function handler(req, res) {
 
   // Support old format (prompt string) and new format (mode/words/level/topic)
   if (body.prompt && !body.mode) {
-    // Old format — just pass straight to Claude
     try {
       const aiText = await callClaude(body.prompt);
       return res.status(200).json({ result: aiText });
@@ -46,7 +45,6 @@ export default async function handler(req, res) {
     if (!d.result) return null;
     try {
       let val = d.result;
-      // Parse as many times as needed until we get an object
       while (typeof val === "string") {
         val = JSON.parse(val);
       }
@@ -144,10 +142,31 @@ word | definition | example sentence | memory hint`;
           await kvSet(cacheKey, w);
         }
       }
+
+    } else if (mode === "replace") {
+      // Generate one new word on the same topic, avoiding existing words
+      const exclude = body.exclude || "";
+      const prompt = `You are a vocabulary teacher. Generate exactly 1 new vocabulary word about "${topic || "general English vocabulary"}" for ${level} students.
+
+Do NOT use any of these words: ${exclude}.
+
+Respond with exactly one line in this format, nothing else:
+word | definition | example sentence | memory hint`;
+
+      const aiText = await callClaude(prompt);
+      results = parseWords(aiText);
+      fromAI = results.length;
+
+      // Cache the new word
+      for (const w of results) {
+        const cacheKey = `word:${w.word.toLowerCase().trim()}:${level}`;
+        const existing = await kvGet(cacheKey);
+        if (!existing) {
+          await kvSet(cacheKey, w);
+        }
+      }
     }
 
-    // Return both new format (results array) and old format (result string)
-    // so both old and new frontend versions work
     const resultString = results.map(w =>
       `${w.word} | ${w.definition} | ${w.example} | ${w.hint}`
     ).join("\n");
@@ -169,7 +188,7 @@ async function callClaude(prompt) {
     },
     body: JSON.stringify({
       model: "claude-haiku-4-5-20251001",
-      max_tokens: 2000,
+      max_tokens: 500,
       messages: [{ role: "user", content: prompt }]
     })
   });
