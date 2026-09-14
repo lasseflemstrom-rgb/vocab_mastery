@@ -49,6 +49,16 @@ Respond with ONLY a JSON object, no other text, in this exact shape:
     } catch(parseErr) {
       return res.status(502).json({ error: "AI response was not valid JSON" });
     }
+
+    // Count this feedback interaction — never let a stats hiccup break the real response
+    try {
+      const UPSTASH_URL = process.env.UPSTASH_REDIS_REST_URL;
+      const UPSTASH_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN;
+      await fetch(`${UPSTASH_URL}/incr/stats:feedback:total`, {
+        headers: { Authorization: `Bearer ${UPSTASH_TOKEN}` }
+      });
+    } catch(statsErr) {}
+
     return res.status(200).json(result);
   } catch (err) {
     return res.status(500).json({ error: err.message });

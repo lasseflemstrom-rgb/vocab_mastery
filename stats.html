@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vocabulary Mastery — Stats</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f1117; --surface: #181c27; --surface2: #1f2433;
+    --border: #2a3045; --accent: #7eb8a4; --accent-dim: #4a7a6a;
+    --text: #e8eaf0; --text-muted: #8892a4; --error: #e07070; --radius: 14px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 60px 20px; }
+  .app-title { font-family: 'Lora', serif; font-size: 13px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
+  h1 { font-family: 'Lora', serif; font-size: 26px; font-weight: 600; margin-bottom: 32px; }
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px; width: 100%; max-width: 420px; }
+  label { font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 6px; }
+  input[type="password"] { width: 100%; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px; padding: 12px 16px; outline: none; margin-bottom: 14px; }
+  input[type="password"]:focus { border-color: var(--accent-dim); }
+  .btn { font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; padding: 11px 22px; border-radius: 8px; border: none; cursor: pointer; background: var(--accent); color: var(--bg); width: 100%; }
+  .btn:hover { opacity: 0.88; }
+  .msg { font-size: 13px; margin-top: 12px; color: var(--error); }
+  .stats-grid { display: grid; gap: 14px; width: 100%; max-width: 420px; margin-top: 24px; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px 26px; display: flex; justify-content: space-between; align-items: baseline; }
+  .stat-label { font-size: 13px; color: var(--text-muted); }
+  .stat-value { font-family: 'Lora', serif; font-size: 32px; font-weight: 600; color: var(--accent); }
+  .refresh-note { font-size: 12px; color: var(--text-muted); margin-top: 20px; text-align: center; }
+</style>
+</head>
+<body>
+<div class="app-title">Vocabulary Mastery</div>
+<h1>Usage Stats</h1>
+
+<div class="panel" id="loginPanel">
+  <label>Stats key</label>
+  <input type="password" id="keyInput" placeholder="Enter your key…" onkeydown="if(event.key==='Enter')loadStats()">
+  <button class="btn" onclick="loadStats()">View stats</button>
+  <div class="msg" id="loginMsg"></div>
+</div>
+
+<div class="stats-grid" id="statsGrid" style="display:none;">
+  <div class="stat-card"><div class="stat-label">Page visits</div><div class="stat-value" id="visitsVal">—</div></div>
+  <div class="stat-card"><div class="stat-label">Game files downloaded</div><div class="stat-value" id="downloadsVal">—</div></div>
+  <div class="stat-card"><div class="stat-label">AI feedback checks</div><div class="stat-value" id="feedbackVal">—</div></div>
+</div>
+<div class="refresh-note" id="refreshNote" style="display:none;">Refresh this page to update.</div>
+
+<script>
+const storedKey = localStorage.getItem("statsKey");
+if (storedKey) {
+  document.getElementById("keyInput").value = storedKey;
+  loadStats();
+}
+
+async function loadStats() {
+  const key = document.getElementById("keyInput").value.trim();
+  const msg = document.getElementById("loginMsg");
+  if (!key) { msg.textContent = "Please enter your stats key."; return; }
+
+  msg.textContent = "";
+  try {
+    const resp = await fetch(`/api/stats?key=${encodeURIComponent(key)}`);
+    if (resp.status === 401) {
+      msg.textContent = "Incorrect key.";
+      localStorage.removeItem("statsKey");
+      return;
+    }
+    if (!resp.ok) {
+      msg.textContent = "Something went wrong loading stats.";
+      return;
+    }
+    const data = await resp.json();
+    localStorage.setItem("statsKey", key);
+    document.getElementById("visitsVal").textContent = data.visits;
+    document.getElementById("downloadsVal").textContent = data.downloads;
+    document.getElementById("feedbackVal").textContent = data.feedbackChecks;
+    document.getElementById("loginPanel").style.display = "none";
+    document.getElementById("statsGrid").style.display = "grid";
+    document.getElementById("refreshNote").style.display = "block";
+  } catch (e) {
+    msg.textContent = "Could not reach the server.";
+  }
+}
+</script>
+</body>
+</html>

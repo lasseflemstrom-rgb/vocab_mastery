@@ -219,6 +219,13 @@
 
 <script>
 
+/* ========= STATS TRACKING ========= */
+fetch("/api/track", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ event: "visit" })
+}).catch(() => {});
+
 /* ========= TABS ========= */
 function switchTab(name, el){
   document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
@@ -425,6 +432,12 @@ function generateGame(){
   const a = document.createElement("a");
   a.href = url; a.download = filename; a.click();
   URL.revokeObjectURL(url);
+
+  fetch("/api/track", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ event: "download" })
+  }).catch(() => {});
 
   showMsg("generateMsg", `✓ Downloaded <strong>${filename}</strong> — share this file with your students.`, "success");
   setTimeout(() => document.getElementById("donationModal").classList.add("open"), 1200);
