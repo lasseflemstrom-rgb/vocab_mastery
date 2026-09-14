@@ -488,9 +488,9 @@ return `<!DOCTYPE html>
   .feedback-msg{font-size:14px;margin-top:12px;padding:10px 14px;border-radius:8px;line-height:1.5;}
   .feedback-msg.error{background:rgba(224,112,112,0.1);border:1px solid rgba(224,112,112,0.25);color:var(--error);}
   .feedback-msg.hint-msg{background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);}
-  .feedback-msg.ai-correct{background:rgba(126,184,164,0.1);border:1px solid rgba(126,184,164,0.25);color:var(--success);}
-  .feedback-msg.ai-incorrect{background:rgba(224,112,112,0.1);border:1px solid rgba(224,112,112,0.25);color:var(--error);}
-  .feedback-msg.ai-neutral{background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);}
+  .feedback-msg.ai-correct{background:rgba(126,184,164,0.1);border:1px solid rgba(126,184,164,0.25);color:var(--success);font-size:19px;font-weight:500;line-height:1.6;padding:18px 22px;}
+  .feedback-msg.ai-incorrect{background:rgba(224,112,112,0.1);border:1px solid rgba(224,112,112,0.25);color:var(--error);font-size:19px;font-weight:500;line-height:1.6;padding:18px 22px;}
+  .feedback-msg.ai-neutral{background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);font-size:17px;line-height:1.6;padding:16px 20px;}
   .intro-steps{list-style:none;counter-reset:steps;display:flex;flex-direction:column;gap:14px;margin-bottom:32px;}
   .intro-steps li{counter-increment:steps;display:flex;align-items:center;gap:16px;font-size:16px;font-weight:300;color:var(--text);}
   .intro-steps li::before{content:counter(steps);width:30px;height:30px;background:var(--surface2);border:1px solid var(--border);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:var(--accent);flex-shrink:0;}
@@ -546,7 +546,7 @@ let spellingIndex=0,sentenceIndex=0,masteredSteps=0;
 let meaningQueue=[...baseWords],meaningIndex=0,mcRepeatLater=[];
 let spellingQueue=[...baseWords],repeatLater=[];
 let phase="intro",currentOptions=[],usedHint=false,usedAudio=false,lastCorrect=false;
-let sentences={},mistakes={},studentName="";
+let sentences={},mistakes={},studentName="",sentenceDraft="";
 let firstTime=new Set(baseWords.map(w=>w.word));
 let perfectWords=new Set();
 let lastAiFeedback=null;
@@ -558,13 +558,13 @@ function updateProgress(){
   if(phase==="intro")done=0;
   else if(phase==="choice"||phase==="choiceFeedback")phasePill="meaning";
   else if(phase==="spelling"||phase==="spellFeedback")phasePill="spelling";
-  else if(phase==="sentence"||phase==="sentenceFeedback")phasePill="sentence";
+  else if(phase==="sentence"||phase==="sentenceFeedback"||phase==="sentenceRevise")phasePill="sentence";
   else if(phase==="end")done=totalSteps;
   if(phasePill)document.getElementById("pill-"+phasePill).classList.add("active");
   fill.style.width=Math.round((done/totalSteps)*100)+"%";
   label.textContent=done+" / "+totalSteps;
 }
-function render(){game.style.animation="none";game.offsetHeight;game.style.animation="";updateProgress();if(phase==="intro")intro();else if(phase==="choice")choice();else if(phase==="choiceFeedback")choiceFeedback();else if(phase==="spelling")spelling();else if(phase==="spellFeedback")spellFeedback();else if(phase==="sentence")sentence();else if(phase==="sentenceFeedback")sentenceFeedback();else summary();}
+function render(){game.style.animation="none";game.offsetHeight;game.style.animation="";updateProgress();if(phase==="intro")intro();else if(phase==="choice")choice();else if(phase==="choiceFeedback")choiceFeedback();else if(phase==="spelling")spelling();else if(phase==="spellFeedback")spellFeedback();else if(phase==="sentence")sentence();else if(phase==="sentenceRevise")sentenceRevise();else if(phase==="sentenceFeedback")sentenceFeedback();else summary();}
 function enableEnterToContinue(fn){function handler(e){const tag=e.target.tagName;if(tag==="INPUT"||tag==="TEXTAREA")return;if(e.key==="Enter"||e.key===" "){e.preventDefault();document.removeEventListener("keydown",handler);fn();}}document.addEventListener("keydown",handler);}
 function fireConfetti(){const canvas=document.getElementById("confetti-canvas"),ctx=canvas.getContext("2d");canvas.width=window.innerWidth;canvas.height=window.innerHeight;const colors=["#7eb8a4","#a8d8c8","#e8eaf0","#4a7a6a","#c8e8de","#f0c87a"];const particles=Array.from({length:72},()=>({x:Math.random()*canvas.width,y:-10-Math.random()*40,r:4+Math.random()*5,d:2+Math.random()*3,color:colors[Math.floor(Math.random()*colors.length)],tilt:Math.random()*10-5,tiltSpeed:0.1+Math.random()*0.2,angle:0,shape:Math.random()>0.5?"rect":"circle"}));let frame=0;const maxFrames=90;function draw(){ctx.clearRect(0,0,canvas.width,canvas.height);particles.forEach(p=>{ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.angle);ctx.fillStyle=p.color;ctx.globalAlpha=Math.max(0,1-frame/maxFrames);if(p.shape==="rect"){ctx.fillRect(-p.r/2,-p.r/2,p.r,p.r*1.6);}else{ctx.beginPath();ctx.arc(0,0,p.r/2,0,Math.PI*2);ctx.fill();}ctx.restore();p.y+=p.d;p.x+=Math.sin(p.angle)*1.5;p.angle+=p.tiltSpeed;p.tilt+=p.tiltSpeed;});frame++;if(frame<maxFrames)requestAnimationFrame(draw);else ctx.clearRect(0,0,canvas.width,canvas.height);}draw();}
 function intro(){game.innerHTML=\`<div class="section-label">How it works</div><ul class="intro-steps"><li>Choose the correct meaning for each word</li><li>Spell the word from its definition</li><li>Write a sentence that shows you understand it</li></ul><div class="info-box" style="margin-bottom:28px;"><p><strong>Mastering a word</strong>Each word has three steps — meaning, spelling, and sentence. Complete all three correctly and you master the word. The confetti means you've got one! You need <strong>\${totalSteps} correct answers</strong> in total to finish.</p><p><strong>When you finish</strong>Show the summary screen to your teacher.</p></div><div class="section-label" style="margin-bottom:8px;">Your name</div><input type="text" id="nameInput" placeholder="Enter your name…" style="margin-bottom:16px;" onkeydown="if(event.key==='Enter')startGame()"><div class="btn-row"><button class="btn btn-primary" onclick="startGame()">Begin</button></div><div id="nameFb"></div>\`;setTimeout(()=>document.getElementById("nameInput").focus(),50);}
@@ -592,6 +592,33 @@ async function checkSentence(){
   btn.disabled=true;
   fb.innerHTML=\`<div class="feedback-msg ai-neutral">Checking your sentence…</div>\`;
   lastAiFeedback=await checkSentenceWithAI(w.word,w.definition,s);
+  sentenceDraft=s;
+  if(lastAiFeedback.correct===false){phase="sentenceRevise";render();return;}
+  sentences[w.word]=s;
+  if(firstTime.has(w.word))perfectWords.add(w.word);
+  fireConfetti();
+  masteredSteps++;
+  phase="sentenceFeedback";
+  render();
+}
+function sentenceRevise(){
+  let w=baseWords[sentenceIndex];
+  game.innerHTML=\`<div class="word-display" style="font-size:28px;margin-bottom:16px;">\${w.word}</div><div class="feedback-msg ai-incorrect">\${lastAiFeedback.feedback}</div><div class="hint-bar" style="margin:16px 0 8px;">Revise your sentence based on the feedback above, then check it again.</div><textarea id="t">\${sentenceDraft}</textarea><div class="btn-row"><button class="btn btn-primary" id="checkBtn" onclick="submitRevision()">Check again</button></div><div id="fb"></div>\`;
+  setTimeout(()=>{const el=document.getElementById("t");el.focus();el.setSelectionRange(el.value.length,el.value.length);},50);
+}
+async function submitRevision(){
+  let w=baseWords[sentenceIndex];
+  let s=document.getElementById("t").value.trim();
+  let fb=document.getElementById("fb");
+  let btn=document.getElementById("checkBtn");
+  if(s.split(/\\s+/).length<5){fb.innerHTML=\`<div class="feedback-msg error">That's too short — try writing a fuller sentence of at least 5 words.</div>\`;return;}
+  if(!/^[A-Z]/.test(s)){fb.innerHTML=\`<div class="feedback-msg error">Start your sentence with a capital letter.</div>\`;return;}
+  if(!/[.!?]$/.test(s)){fb.innerHTML=\`<div class="feedback-msg error">End your sentence with a full stop, exclamation mark, or question mark.</div>\`;return;}
+  btn.disabled=true;
+  fb.innerHTML=\`<div class="feedback-msg ai-neutral">Checking your sentence…</div>\`;
+  lastAiFeedback=await checkSentenceWithAI(w.word,w.definition,s);
+  sentenceDraft=s;
+  if(lastAiFeedback.correct===false){render();return;}
   sentences[w.word]=s;
   if(firstTime.has(w.word))perfectWords.add(w.word);
   fireConfetti();
