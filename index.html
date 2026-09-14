@@ -484,9 +484,13 @@ return `<!DOCTYPE html>
   .btn-primary{background:var(--accent);color:var(--bg);}
   .btn-ghost{background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);}
   .btn-ghost:hover{color:var(--text);border-color:var(--accent-dim);}
+  .btn:disabled{opacity:0.4;cursor:not-allowed;transform:none;}
   .feedback-msg{font-size:14px;margin-top:12px;padding:10px 14px;border-radius:8px;line-height:1.5;}
   .feedback-msg.error{background:rgba(224,112,112,0.1);border:1px solid rgba(224,112,112,0.25);color:var(--error);}
   .feedback-msg.hint-msg{background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);}
+  .feedback-msg.ai-correct{background:rgba(126,184,164,0.1);border:1px solid rgba(126,184,164,0.25);color:var(--success);}
+  .feedback-msg.ai-incorrect{background:rgba(224,112,112,0.1);border:1px solid rgba(224,112,112,0.25);color:var(--error);}
+  .feedback-msg.ai-neutral{background:var(--surface2);border:1px solid var(--border);color:var(--text-muted);}
   .intro-steps{list-style:none;counter-reset:steps;display:flex;flex-direction:column;gap:14px;margin-bottom:32px;}
   .intro-steps li{counter-increment:steps;display:flex;align-items:center;gap:16px;font-size:16px;font-weight:300;color:var(--text);}
   .intro-steps li::before{content:counter(steps);width:30px;height:30px;background:var(--surface2);border:1px solid var(--border);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:var(--accent);flex-shrink:0;}
@@ -533,6 +537,7 @@ return `<!DOCTYPE html>
 </header>
 <div id="game" class="card"></div>
 <script>
+const CHECK_SENTENCE_API = "https://YOUR-APP-NAME.vercel.app/api/check-sentence";
 const game=document.getElementById("game");
 const baseWords=\`${safeWordList}\`.trim().split("\\n").map(line=>{let[word,definition,example,hint]=line.split("|").map(x=>x.trim());return{word,definition,example,hint};});
 const originalCount=baseWords.length;
@@ -544,6 +549,7 @@ let phase="intro",currentOptions=[],usedHint=false,usedAudio=false,lastCorrect=f
 let sentences={},mistakes={},studentName="";
 let firstTime=new Set(baseWords.map(w=>w.word));
 let perfectWords=new Set();
+let lastAiFeedback=null;
 baseWords.forEach(w=>mistakes[w.word]=0);
 function updateProgress(){
   const fill=document.getElementById("progressFill"),label=document.getElementById("progressLabel");
@@ -575,8 +581,45 @@ const encouragements=["Don't worry — spelling takes practice!","Keep going, yo
 function spellFeedback(){let w=spellingQueue[spellingIndex];let message="";if(!lastCorrect)message=\`<p style="color:var(--accent);font-size:14px;margin-bottom:12px;">\${encouragements[Math.floor(Math.random()*encouragements.length)]} Study the correct spelling below and try to memorise it.</p>\`;else if(usedHint&&usedAudio)message=\`<p style="color:var(--accent);font-size:14px;margin-bottom:12px;">That's right! Next time, try to remember the spelling without using the hint or listening to it.</p>\`;else if(usedHint)message=\`<p style="color:var(--accent);font-size:14px;margin-bottom:12px;">That's right! Study the word below so you can spell it without the hint next time.</p>\`;else if(usedAudio)message=\`<p style="color:var(--accent);font-size:14px;margin-bottom:12px;">That's right! Study the word below so you can spell it without listening to it next time.</p>\`;game.innerHTML=\`<h2 class="\${lastCorrect?'correct':'incorrect'}">\${!lastCorrect?"✗ Not quite":(!usedHint&&!usedAudio)?"🎉 Perfect! Well done.":"✓ That's right"}</h2>\${message}<div class="info-box"><p><strong>Correct spelling</strong><span style="font-family:'Lora',serif;font-size:20px;font-weight:600;">\${w.word}</span></p><p><strong>Definition</strong>\${w.definition}</p><p><strong>In use</strong><em>\${w.example}</em></p><p><strong>Remember</strong>\${w.hint}</p></div><div class="btn-row"><button class="btn btn-primary" onclick="advanceSpelling()">Continue</button></div><p class="key-hint">or press <kbd>Enter</kbd> / <kbd>Space</kbd></p>\`;enableEnterToContinue(advanceSpelling);}
 function advanceSpelling(){spellingIndex++;if(spellingIndex>=spellingQueue.length&&repeatLater.length)spellingQueue.push(...repeatLater.splice(0));if(spellingIndex<spellingQueue.length)phase="spelling";else phase="sentence";render();}
 function sentence(){let w=baseWords[sentenceIndex];game.innerHTML=\`<div class="section-label">Write a sentence</div><div class="word-display">\${w.word}</div><div class="hint-bar" style="margin:8px 0 20px;">\${w.definition}</div><textarea id="t" placeholder="Write a sentence that shows you know what this word means…"></textarea><div class="btn-row"><button class="btn btn-primary" id="checkBtn" onclick="checkSentence()">Check</button></div><div id="fb"></div>\`;setTimeout(()=>document.getElementById("t").focus(),50);}
-function checkSentence(){let w=baseWords[sentenceIndex];let s=document.getElementById("t").value.trim();let fb=document.getElementById("fb");if(!s.toLowerCase().includes(w.word)){fb.innerHTML=\`<div class="feedback-msg error">Your sentence must include the word <strong>\${w.word}</strong>.</div>\`;return;}if(s.split(/\\s+/).length<5){fb.innerHTML=\`<div class="feedback-msg error">That's too short — try writing a fuller sentence of at least 5 words.</div>\`;return;}if(!/^[A-Z]/.test(s)){fb.innerHTML=\`<div class="feedback-msg error">Start your sentence with a capital letter.</div>\`;return;}if(!/[.!?]$/.test(s)){fb.innerHTML=\`<div class="feedback-msg error">End your sentence with a full stop, exclamation mark, or question mark.</div>\`;return;}sentences[w.word]=s;if(firstTime.has(w.word))perfectWords.add(w.word);fireConfetti();masteredSteps++;phase="sentenceFeedback";render();}
-function sentenceFeedback(){let w=baseWords[sentenceIndex];const s=sentences[w.word];game.innerHTML=\`<h2 class="correct">Looks right!</h2><div class="word-display" style="font-size:28px;margin-bottom:20px;">\${w.word}</div><div class="info-box"><p><strong>Your sentence</strong><em>\${s}</em></p><p><strong>Another example</strong><em>\${w.example}</em></p></div><div class="btn-row"><button class="btn btn-primary" onclick="nextSentence()">Continue</button></div><p class="key-hint">or press <kbd>Enter</kbd> / <kbd>Space</kbd></p>\`;enableEnterToContinue(nextSentence);}
+async function checkSentence(){
+  let w=baseWords[sentenceIndex];
+  let s=document.getElementById("t").value.trim();
+  let fb=document.getElementById("fb");
+  let btn=document.getElementById("checkBtn");
+  if(s.split(/\\s+/).length<5){fb.innerHTML=\`<div class="feedback-msg error">That's too short — try writing a fuller sentence of at least 5 words.</div>\`;return;}
+  if(!/^[A-Z]/.test(s)){fb.innerHTML=\`<div class="feedback-msg error">Start your sentence with a capital letter.</div>\`;return;}
+  if(!/[.!?]$/.test(s)){fb.innerHTML=\`<div class="feedback-msg error">End your sentence with a full stop, exclamation mark, or question mark.</div>\`;return;}
+  btn.disabled=true;
+  fb.innerHTML=\`<div class="feedback-msg ai-neutral">Checking your sentence…</div>\`;
+  lastAiFeedback=await checkSentenceWithAI(w.word,w.definition,s);
+  sentences[w.word]=s;
+  if(firstTime.has(w.word))perfectWords.add(w.word);
+  fireConfetti();
+  masteredSteps++;
+  phase="sentenceFeedback";
+  render();
+}
+async function checkSentenceWithAI(word,definition,sentence){
+  try{
+    const resp=await fetch(CHECK_SENTENCE_API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({word,definition,sentence})});
+    if(!resp.ok)return{correct:null,feedback:"Could not check your sentence right now, but nice work finishing it."};
+    return await resp.json();
+  }catch(e){
+    return{correct:null,feedback:"Could not check your sentence right now, but nice work finishing it."};
+  }
+}
+function sentenceFeedback(){
+  let w=baseWords[sentenceIndex];
+  const s=sentences[w.word];
+  let aiHtml="";
+  if(lastAiFeedback){
+    if(lastAiFeedback.correct===true)aiHtml=\`<div class="feedback-msg ai-correct">✓ \${lastAiFeedback.feedback}</div>\`;
+    else if(lastAiFeedback.correct===false)aiHtml=\`<div class="feedback-msg ai-incorrect">\${lastAiFeedback.feedback}</div>\`;
+    else aiHtml=\`<div class="feedback-msg ai-neutral">\${lastAiFeedback.feedback}</div>\`;
+  }
+  game.innerHTML=\`<h2 class="correct">Looks right!</h2><div class="word-display" style="font-size:28px;margin-bottom:20px;">\${w.word}</div><div class="info-box"><p><strong>Your sentence</strong><em>\${s}</em></p><p><strong>Another example</strong><em>\${w.example}</em></p></div>\${aiHtml}<div class="btn-row" style="margin-top:16px;"><button class="btn btn-primary" onclick="nextSentence()">Continue</button></div><p class="key-hint">or press <kbd>Enter</kbd> / <kbd>Space</kbd></p>\`;
+  enableEnterToContinue(nextSentence);
+}
 function nextSentence(){sentenceIndex++;if(sentenceIndex<originalCount)phase="sentence";else phase="end";render();}
 function summary(){updateProgress();let hardest=Object.entries(mistakes).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]).slice(0,3);let hardestHtml=hardest.length?hardest.map(([word,count])=>\`<div class="summary-item"><div class="word">\${word}</div><div class="detail">\${count} mistake\${count>1?'s':''}</div></div>\`).join(""):\`<div class="summary-item"><div class="detail" style="color:var(--success);">No mistakes — excellent work!</div></div>\`;let perfectHtml=perfectWords.size?[...perfectWords].map(word=>\`<div class="summary-item"><div class="word">\${word}</div></div>\`).join(""):\`<div class="summary-item"><div class="detail">Keep practising — you'll get there!</div></div>\`;let sentencesHtml=Object.entries(sentences).map(([word,s])=>\`<div class="summary-item"><div class="word">\${word}</div><div class="sentence-text">\${s}</div></div>\`).join("");game.innerHTML=\`<div class="section-label">Complete</div><h2 style="margin-bottom:4px;">Session finished</h2><div class="student-name">\${studentName}</div><div class="section-label" style="margin-bottom:12px;">Got it first time</div><div class="summary-grid">\${perfectHtml}</div><hr class="divider"><div class="section-label" style="margin-bottom:12px;">Words to review</div><div class="summary-grid">\${hardestHtml}</div><hr class="divider"><div class="section-label" style="margin-bottom:12px;">Your sentences</div><div class="summary-grid">\${sentencesHtml}</div><hr class="divider"><div class="btn-row"><button class="btn btn-primary" onclick="window.print()">🖨 Save / Print summary</button></div>\`;}
 render();
