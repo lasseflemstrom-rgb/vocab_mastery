@@ -537,7 +537,7 @@ return `<!DOCTYPE html>
 </header>
 <div id="game" class="card"></div>
 <script>
-const CHECK_SENTENCE_API = "https://YOUR-APP-NAME.vercel.app/api/check-sentence";
+const CHECK_SENTENCE_API = "https://vocab-mastery-git-sentence-feedback-lasse-s-projects4.vercel.app/api/check-sentence";
 const game=document.getElementById("game");
 const baseWords=\`${safeWordList}\`.trim().split("\\n").map(line=>{let[word,definition,example,hint]=line.split("|").map(x=>x.trim());return{word,definition,example,hint};});
 const originalCount=baseWords.length;
