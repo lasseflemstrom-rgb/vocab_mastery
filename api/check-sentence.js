@@ -37,8 +37,10 @@ Check two things:
 1. Does the sentence use some grammatical form of "${word}" (tense change, plural, noun/verb/adjective conversion, comparative/superlative, etc. all count — it does not need to match the exact stem)?
 2. Is that word used correctly and naturally in context, and spelled correctly in whatever form it takes?
 
+The goal of this exercise is for the student to practice using "${word}" specifically, so if the sentence is incorrect, your feedback must help them fix the sentence while STILL using "${word}" (or a valid form of it) — never suggest replacing it with a different word, even if another word would fit the context better. Point out what's wrong (wrong meaning, wrong context, awkward phrasing, etc.) and suggest how to rework the sentence around "${word}" so it becomes correct.
+
 Respond with ONLY a JSON object, no other text, in this exact shape:
-{"correct": true or false, "wordFormUsed": "the form the student used", "feedback": "one short, encouraging, student-friendly sentence. If incorrect, briefly say why and suggest a fix."}`;
+{"correct": true or false, "wordFormUsed": "the form the student used", "feedback": "one short, encouraging, student-friendly sentence. If incorrect, briefly say why and suggest a fix that still uses the target word."}`;
 
   try {
     const aiText = await callClaude(prompt);
