@@ -629,7 +629,8 @@ async function submitRevision(){
   if(!/[.!?]$/.test(s)){fb.innerHTML=\`<div class="feedback-msg error">End your sentence with a full stop, exclamation mark, or question mark.</div>\`;return;}
   btn.disabled=true;
   fb.innerHTML=\`<div class="feedback-msg ai-neutral">Checking your sentence…</div>\`;
-  lastAiFeedback=await checkSentenceWithAI(w.word,w.definition,s);
+  const prevSentence=sentenceDraft,prevFeedback=lastAiFeedback&&lastAiFeedback.feedback;
+  lastAiFeedback=await checkSentenceWithAI(w.word,w.definition,s,prevSentence,prevFeedback);
   sentenceDraft=s;
   if(lastAiFeedback.correct===false){render();return;}
   sentences[w.word]=s;
@@ -639,9 +640,9 @@ async function submitRevision(){
   phase="sentenceFeedback";
   render();
 }
-async function checkSentenceWithAI(word,definition,sentence){
+async function checkSentenceWithAI(word,definition,sentence,previousSentence,previousFeedback){
   try{
-    const resp=await fetch(CHECK_SENTENCE_API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({word,definition,sentence})});
+    const resp=await fetch(CHECK_SENTENCE_API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({word,definition,sentence,previousSentence,previousFeedback})});
     if(!resp.ok)return{correct:null,feedback:"Could not check your sentence right now, but nice work finishing it."};
     return await resp.json();
   }catch(e){
